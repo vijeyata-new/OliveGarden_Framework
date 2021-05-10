@@ -26,6 +26,7 @@ import cucumber.api.java.en.When;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 import com.filepath.Constant;
+import com.filepath.ExcelUtil;
 import com.graphbuilder.curve.Point;
 
 public class GlueOlive {
@@ -33,12 +34,7 @@ public class GlueOlive {
 	public WebDriver d;
 	public WebDriverWait w;
 	
-	public static Path currentRelativePath = Paths.get("");
 	
-	File f = new File(Constant.Path_Testdata+Constant.File_Testdata);
-	FileInputStream fis;
-	XSSFWorkbook wbook;
-	XSSFSheet wsheet;
 	
 	@Given("^launch Website$")
 	public void launch_Website() throws Throwable {
@@ -48,7 +44,6 @@ public class GlueOlive {
 		d.manage().deleteAllCookies();
 		d.get("https://www.olivegarden.com/home");
 		d.manage().timeouts().implicitlyWait(200, TimeUnit.SECONDS);
-		Thread.sleep(200);
 	}
 
 	@When("^Click Login$")
@@ -61,79 +56,86 @@ public class GlueOlive {
 	@When("^Click Register$")
 	public void click_register() throws Throwable {
 
-		WebElement reg=d.findElement(By.id("customerLogoutId"));
-		reg.click();
+		WebElement register=d.findElement(By.xpath("//*[contains(@id,'customerLogoutId')]"));
+		register.click();
 	}
 
 	@When("^Fill form$")
 	public void fill_form() throws Throwable {
+
+		String path=Constant.Path_Testdata+Constant.File_Testdata;
+		String sheetname="sheet1";
 		
-		fis= new FileInputStream(f);
-		wbook=new XSSFWorkbook(fis);
-		wsheet=wbook.getSheet("Sheet1");
+		ExcelUtil.setExcelFile(path, sheetname);
 		
-		WebElement email=d.findElement(By.id("email-id"));
-		WebElement fname=d.findElement(By.id("fname"));
-		WebElement lname=d.findElement(By.id("lname"));
-		WebElement zipcode=d.findElement(By.id("zip"));
-		WebElement cont=d.findElement(By.id("phone-ctn"));
-		WebElement month=d.findElement(By.id("dobMonth"));
+		
+		WebElement email=d.findElement(By.xpath("//*[@id='email-id']"));
+		WebElement fname=d.findElement(By.xpath("//*[@id='fname']"));
+		WebElement lname=d.findElement(By.xpath("//*[@id='lname']"));
+		WebElement zipcode=d.findElement(By.xpath("//*[@id='zip']"));
+		WebElement cont=d.findElement(By.xpath("//*[@id='phone-ctn']"));
+		WebElement month=d.findElement(By.xpath("//*[@id='dobMonth']"));
 		Select dm=new Select(month);
-		WebElement day=d.findElement(By.id("dobDay"));
+		WebElement day=d.findElement(By.xpath("//*[@id='dobDay']"));
 		Select dd=new Select(day);
-		WebElement year=d.findElement(By.id("dobYear"));
+		WebElement year=d.findElement(By.xpath("//*[@id='dobYear']"));
 		Select dy=new Select(year);
-		WebElement pwd=d.findElement(By.id("pwd"));
+		WebElement pwd=d.findElement(By.xpath("//*[@id='pwd']"));
 		
-		String temp="";
-		int rowcount = wsheet.getLastRowNum()-wsheet.getFirstRowNum();
-		for(int i=0;i<=rowcount;i++) {
-			int cellcount = wsheet.getRow(i).getLastCellNum();
+		int rowcnt=ExcelUtil.getRowCountInSheet();
+		System.out.println(rowcnt);
+		
+		for(int i=0;i<=rowcnt;i++) {
+			//int cellcount = wsheet.getRow(i).getLastCellNum();
 			//System.out.println(cellcount);
 				//temp=wsheet.getRow(i).getCell(1).getStringCellValue();
 				
 				if(i==0) {
-					email.sendKeys(wsheet.getRow(i).getCell(1).getStringCellValue());
+					email.sendKeys(ExcelUtil.getCellData(i,1));
 				}
 				if(i==1) {
-					fname.sendKeys(wsheet.getRow(i).getCell(1).getStringCellValue());
+					fname.sendKeys(ExcelUtil.getCellData(i,1));
 				}
 				if(i==2) {
-					lname.sendKeys(wsheet.getRow(i).getCell(1).getStringCellValue());
+					lname.sendKeys(ExcelUtil.getCellData(i,1));
 				}
 				if(i==3) {
-					zipcode.sendKeys(""+wsheet.getRow(i).getCell(1).getNumericCellValue());
+					//String x=ExcelUtil.getCellData(i,1);
+					//double temp=Double.valueOf(x);	
+					zipcode.sendKeys(""+ExcelUtil.getnumericCell(i,1));
 				}
 				if(i==4) {
-					cont.sendKeys(""+wsheet.getRow(i).getCell(1).getNumericCellValue());
+					//double temp=Double.valueOf(ExcelUtil.getCellData(i,1));	
+					cont.sendKeys(""+ExcelUtil.getnumericCell(i,1));
 				}
 				if(i==5) {
-					dm.selectByVisibleText(wsheet.getRow(i).getCell(1).getStringCellValue());
+					dm.selectByVisibleText(ExcelUtil.getCellData(i,1));
 
 				}
 				if(i==6) {
-					double num= wsheet.getRow(i).getCell(1).getNumericCellValue();
-					int tmp=(int)num;
-					dd.selectByVisibleText(""+tmp);
-					//dd.selectByVisibleText();
+					//double temp=Double.valueOf(ExcelUtil.getCellData(i,1));	
+					dd.selectByVisibleText(""+ExcelUtil.getnumericCell(i,1));
+					
 	
 				}
 				if(i==7) {
-					double num= wsheet.getRow(i).getCell(1).getNumericCellValue();
-					int tmp=(int)num;
-					dy.selectByVisibleText(""+tmp);
+					//double temp=Double.valueOf(ExcelUtil.getCellData(i,1));	
+					dy.selectByVisibleText(""+ExcelUtil.getnumericCell(i,1));
 				}
 				if(i==8) {
-					pwd.sendKeys(wsheet.getRow(i).getCell(1).getStringCellValue());
+					pwd.sendKeys(ExcelUtil.getCellData(i,1));
+					d.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 				}
 			}
+			
 	}
 
 	@Then("^Find restaurant$")
 	public void find_restaurant() throws Throwable {
+		
 		WebElement findresto = d.findElement(By.xpath("//*[@id='selectRestaurant']"));
 		findresto.click();
-	/*	
+			/*	
 		try
 		{
 			w.until(ExpectedConditions.alertIsPresent());
@@ -146,37 +148,36 @@ public class GlueOlive {
 		//d.switchTo().alert();
 		//myRestaurantModal*/
 		
-		WebElement srcZip=d.findElement(By.id("searchText_overlay"));
+		WebElement srcZip=d.findElement(By.xpath("//*[@id='searchText_overlay']"));
 		srcZip.clear();
 		srcZip.sendKeys(""+44718);
-		WebElement src=d.findElement(By.id("preferred_searchIcon"));
+		WebElement src=d.findElement(By.xpath("//*[@id='preferred_searchIcon']"));
 		src.click();
 		Thread.sleep(200);
-	//	List<WebElement> srcRes=d.findElements(By.className("casual_span_overlay"));
-
-	//	System.out.println(srcRes.size());
-	//	System.out.println(srcRes.get(2));  
+	
 	//	/html/body/div[7]/div/div[3]/div[2]/div[1]/div[3]/div/div[3]/button
 	//	/html/body/div[7]/div/div[3]/div[2]/div[1]/div[4]/div/div[3]/button
 		
-	WebElement chose=d.findElement(By.xpath("/html/body/div[7]/div/div[3]/div[2]/div[1]/div[3]/div/div[3]/button"));
+	WebElement chose=d.findElement(By.xpath("/html/body/div[8]/div/div[3]/div[2]/div[1]/div[6]/div/div[3]/button"));
 	chose.click();
 		
 	
 		Thread.sleep(2000);		
+		
 	}
 
 	@Then("^Complete account$")
 	public void complete_account() throws Throwable {
-		WebElement regi=d.findElement(By.className("primary-btn"));
 		
-	/*	Actions act=new Actions(d);
-		act.moveToElement(regi).build().perform();
-		act.click(regi).build().perform();*/
-		//w.until(ExpectedConditions.elementToBeClickable(regi)).click();
+		WebElement complete=d.findElement(By.xpath("//*[@type='submit']"));
+		//complete.click();
+	
 		
-		regi.submit();
-	}
+		Actions act=new Actions(d);
+		act.moveToElement(complete).build().perform();
+		act.click(complete).build().perform();
 
+	}
+//--------------------------------------------------------------------------------------------------	
 }
 
